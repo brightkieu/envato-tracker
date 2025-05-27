@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Envato Tracker - Xác nhận Email</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📱 Envato Tracker</div>
+        <div id="result">
+            <p>Đang xác nhận email...</p>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const type = urlParams.get('type');
+        
+        if (token && type === 'signup') {
+            document.getElementById('result').innerHTML = `
+                <div class="success">
+                    <h2>✅ Xác nhận thành công!</h2>
+                    <p>Email của bạn đã được xác nhận.</p>
+                    <p>Bạn có thể đóng trang này và quay lại ứng dụng để đăng nhập.</p>
+                </div>
+            `;
+        } else {
+            document.getElementById('result').innerHTML = `
+                <div class="error">
+                    <h2>❌ Lỗi xác nhận</h2>
+                    <p>Liên kết xác nhận không hợp lệ hoặc đã hết hạn.</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
