@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Envato Tracker - Xác nhận Email</title>
+    <title>Envato Tracker - Xác thực Email</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             margin: 0;
-            padding: 20px;
+            padding: 0;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -19,53 +19,97 @@
             background: white;
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             text-align: center;
             max-width: 400px;
-            width: 100%;
-        }
-        .success {
-            color: #28a745;
-        }
-        .error {
-            color: #dc3545;
+            width: 90%;
         }
         .logo {
+            width: 80px;
+            height: 80px;
+            background: #667eea;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
             font-size: 24px;
             font-weight: bold;
-            margin-bottom: 20px;
+        }
+        h1 {
             color: #333;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .success {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .error {
+            color: #f44336;
+            font-weight: bold;
+        }
+        .btn {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo">📱 Envato Tracker</div>
-        <div id="result">
-            <p>Đang xác nhận email...</p>
+        <div class="logo">ET</div>
+        <h1>Envato Tracker</h1>
+        <div id="message">
+            <p>Đang xác thực email của bạn...</p>
         </div>
     </div>
 
     <script>
+        // Lấy parameters từ URL
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
         const type = urlParams.get('type');
+        const token = urlParams.get('token');
         
-        if (token && type === 'signup') {
-            document.getElementById('result').innerHTML = `
-                <div class="success">
-                    <h2>✅ Xác nhận thành công!</h2>
-                    <p>Email của bạn đã được xác nhận.</p>
-                    <p>Bạn có thể đóng trang này và quay lại ứng dụng để đăng nhập.</p>
-                </div>
+        const messageDiv = document.getElementById('message');
+        
+        if (type === 'signup' && token) {
+            messageDiv.innerHTML = `
+                <p class="success">✅ Email đã được xác thực thành công!</p>
+                <p>Bạn có thể quay lại ứng dụng để đăng nhập.</p>
+                <a href="#" class="btn" onclick="openApp()">Mở ứng dụng</a>
+            `;
+        } else if (type === 'recovery' && token) {
+            messageDiv.innerHTML = `
+                <p class="success">✅ Link đặt lại mật khẩu hợp lệ!</p>
+                <p>Bạn có thể quay lại ứng dụng để đặt mật khẩu mới.</p>
+                <a href="#" class="btn" onclick="openApp()">Mở ứng dụng</a>
             `;
         } else {
-            document.getElementById('result').innerHTML = `
-                <div class="error">
-                    <h2>❌ Lỗi xác nhận</h2>
-                    <p>Liên kết xác nhận không hợp lệ hoặc đã hết hạn.</p>
-                </div>
+            messageDiv.innerHTML = `
+                <p class="error">❌ Link không hợp lệ hoặc đã hết hạn.</p>
+                <p>Vui lòng thử lại hoặc liên hệ hỗ trợ.</p>
             `;
+        }
+        
+        function openApp() {
+            // Thử mở deep link
+            window.location.href = 'com.envatotracker://auth?type=' + type + '&token=' + token;
+            
+            // Fallback sau 2 giây
+            setTimeout(() => {
+                alert('Vui lòng mở ứng dụng Envato Tracker thủ công');
+            }, 2000);
         }
     </script>
 </body>
