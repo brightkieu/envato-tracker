@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Envato Tracker - Xác thực</title>
+    <title>Envato Tracker - OAuth Redirect</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -21,7 +21,7 @@
             border-radius: 10px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             text-align: center;
-            max-width: 400px;
+            max-width: 500px;
             width: 90%;
         }
         .logo {
@@ -81,13 +81,31 @@
         }
         .debug {
             background: #f5f5f5;
-            padding: 10px;
+            padding: 15px;
             border-radius: 5px;
             margin: 10px 0;
             font-family: monospace;
-            font-size: 12px;
+            font-size: 11px;
             text-align: left;
             word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>
@@ -97,20 +115,30 @@
         <h1>Envato Tracker</h1>
         <div id="message">
             <div class="loading"></div>
-            <p>Đang xử lý...</p>
+            <p>Đang xử lý OAuth callback...</p>
         </div>
         <div id="debug"></div>
+        <div id="status"></div>
     </div>
 
     <script>
         // Debug function
         function addDebugInfo(info) {
             const debugDiv = document.getElementById('debug');
-            debugDiv.innerHTML += '<div class="debug">' + info + '</div>';
+            const timestamp = new Date().toLocaleTimeString();
+            debugDiv.innerHTML += '<div>[' + timestamp + '] ' + info + '</div>';
+            console.log('[DEBUG]', info);
         }
 
-        // Lấy parameters từ URL
+        function setStatus(isSuccess, message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = 'status ' + (isSuccess ? 'success' : 'error');
+            statusDiv.innerHTML = message;
+        }
+
+        // Lấy toàn bộ URL và parameters
         const currentUrl = window.location.href;
+        addDebugInfo('Page loaded');
         addDebugInfo('Current URL: ' + currentUrl);
         
         const urlParams = new URLSearchParams(window.location.search);
@@ -118,8 +146,14 @@
         const token = urlParams.get('token');
         const code = urlParams.get('code');
         const error = urlParams.get('error');
+        const state = urlParams.get('state');
         
-        addDebugInfo('Parameters: type=' + type + ', token=' + (token ? 'YES' : 'NO') + ', code=' + (code ? 'YES' : 'NO') + ', error=' + error);
+        addDebugInfo('URL Parameters:');
+        addDebugInfo('  type: ' + (type || 'null'));
+        addDebugInfo('  token: ' + (token ? 'YES (' + token.length + ' chars)' : 'null'));
+        addDebugInfo('  code: ' + (code ? 'YES (' + code.length + ' chars)' : 'null'));
+        addDebugInfo('  error: ' + (error || 'null'));
+        addDebugInfo('  state: ' + (state || 'null'));
         
         const messageDiv = document.getElementById('message');
         
@@ -136,6 +170,7 @@
                 html += `
                     <button class="btn" onclick="openApp()">Mở ứng dụng</button>
                     <button class="btn" onclick="testDeepLink()">Test Deep Link</button>
+                    <button class="btn" onclick="copyToClipboard()">Copy Deep Link</button>
                 `;
             }
             
@@ -145,59 +180,112 @@
         function openApp() {
             let deepLink = 'com.envatotracker://envato/callback';
             
+            const params = new URLSearchParams();
             if (code) {
-                deepLink += '?code=' + encodeURIComponent(code);
-            } else if (error) {
-                deepLink += '?error=' + encodeURIComponent(error);
-            } else if (type && token) {
-                deepLink = 'com.envatotracker://auth/confirm?type=' + type + '&token=' + encodeURIComponent(token);
+                params.append('code', code);
+            }
+            if (error) {
+                params.append('error', error);
+            }
+            if (type && token) {
+                deepLink = 'com.envatotracker://auth/confirm';
+                params.append('type', type);
+                params.append('token', token);
             }
             
-            addDebugInfo('Opening deep link: ' + deepLink);
+            if (params.toString()) {
+                deepLink += '?' + params.toString();
+            }
             
-            console.log('Opening deep link:', deepLink);
+            addDebugInfo('Attempting to open deep link: ' + deepLink);
+            setStatus(true, 'Đang mở ứng dụng...');
             
             // Thử mở deep link
             window.location.href = deepLink;
             
             // Fallback message sau 3 giây
             setTimeout(() => {
-                addDebugInfo('Deep link timeout - app may not be installed');
+                setStatus(false, 'Không thể mở ứng dụng tự động. Vui lòng mở thủ công.');
+                addDebugInfo('Deep link timeout - app may not be installed or deep link not working');
             }, 3000);
         }
         
         function testDeepLink() {
-            const testLink = 'com.envatotracker://envato/callback?code=test123';
+            const testLink = 'com.envatotracker://envato/callback?code=test_code_123456';
             addDebugInfo('Testing with: ' + testLink);
+            setStatus(true, 'Đang test deep link...');
             window.location.href = testLink;
+        }
+        
+        function copyToClipboard() {
+            let deepLink = 'com.envatotracker://envato/callback';
+            
+            if (code) {
+                deepLink += '?code=' + encodeURIComponent(code);
+            } else if (error) {
+                deepLink += '?error=' + encodeURIComponent(error);
+            }
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(deepLink).then(() => {
+                    setStatus(true, 'Deep link đã được copy vào clipboard');
+                });
+            } else {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = deepLink;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                setStatus(true, 'Deep link đã được copy');
+            }
         }
         
         // Xử lý các trường hợp khác nhau
         setTimeout(() => {
-            if (type === 'signup' && token) {
-                showMessage(true, 'Email đã được xác thực!', 'Tài khoản của bạn đã được kích hoạt thành công.');
-                openApp();
-            } else if (type === 'recovery' && token) {
-                showMessage(true, 'Link đặt lại mật khẩu hợp lệ!', 'Bạn có thể đặt mật khẩu mới trong ứng dụng.');
-                openApp();
-            } else if (code) {
-                showMessage(true, 'Kết nối Envato thành công!', 'Tài khoản Envato đã được cấp quyền thành công.');
-                openApp();
+            if (code) {
+                addDebugInfo('OAuth authorization code received');
+                setStatus(true, 'Nhận được authorization code từ Envato');
+                showMessage(true, 'Kết nối Envato thành công!', 'Authorization code: ' + code.substring(0, 10) + '...');
+                // Tự động mở app sau 2 giây
+                setTimeout(openApp, 2000);
             } else if (error) {
-                let errorMessage = 'Có lỗi xảy ra trong quá trình kết nối.';
+                addDebugInfo('OAuth error received: ' + error);
                 
+                let errorMessage = 'Có lỗi xảy ra trong quá trình kết nối.';
                 if (error === 'access_denied') {
-                    errorMessage = 'Bạn đã từ chối cấp quyền truy cập.';
+                    errorMessage = 'Bạn đã từ chối cấp quyền truy cập cho ứng dụng.';
                 } else if (error === 'invalid_request') {
-                    errorMessage = 'Yêu cầu không hợp lệ.';
+                    errorMessage = 'Yêu cầu không hợp lệ. Vui lòng thử lại.';
+                } else if (error === 'invalid_client') {
+                    errorMessage = 'Client ID không hợp lệ.';
+                } else if (error === 'invalid_scope') {
+                    errorMessage = 'Scope không hợp lệ.';
                 }
                 
+                setStatus(false, 'Lỗi OAuth: ' + error);
                 showMessage(false, 'Kết nối Envato thất bại!', errorMessage);
-                openApp();
+            } else if (type === 'signup' && token) {
+                addDebugInfo('Email confirmation received');
+                setStatus(true, 'Email confirmation nhận được');
+                showMessage(true, 'Email đã được xác thực!', 'Tài khoản của bạn đã được kích hoạt thành công.');
+                setTimeout(openApp, 2000);
+            } else if (type === 'recovery' && token) {
+                addDebugInfo('Password recovery received');
+                setStatus(true, 'Password recovery nhận được');
+                showMessage(true, 'Link đặt lại mật khẩu hợp lệ!', 'Bạn có thể đặt mật khẩu mới trong ứng dụng.');
+                setTimeout(openApp, 2000);
             } else {
-                showMessage(false, 'Link không hợp lệ', 'Không tìm thấy thông tin xác thực hợp lệ.');
+                addDebugInfo('No valid parameters found - this might be a direct page visit');
+                setStatus(false, 'Không tìm thấy parameters hợp lệ');
+                showMessage(false, 'Không có thông tin OAuth', 'Trang này dành cho OAuth callback. Vui lòng sử dụng ứng dụng để kết nối Envato.', false);
             }
         }, 1000);
+
+        // Log tất cả thông tin để debug
+        addDebugInfo('User Agent: ' + navigator.userAgent);
+        addDebugInfo('Page ready for OAuth processing');
     </script>
 </body>
 </html>
