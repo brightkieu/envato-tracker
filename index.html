@@ -66,13 +66,28 @@
             cursor: pointer;
             border: none;
         }
-        .btn:hover {
-            background: #5a6fd8;
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        .countdown {
-            font-size: 18px;
-            font-weight: bold;
-            color: #667eea;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .debug {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            text-align: left;
+            word-break: break-all;
         }
     </style>
 </head>
@@ -81,113 +96,108 @@
         <div class="logo">ET</div>
         <h1>Envato Tracker</h1>
         <div id="message">
-            <p>Đang xử lý yêu cầu...</p>
+            <div class="loading"></div>
+            <p>Đang xử lý...</p>
         </div>
+        <div id="debug"></div>
     </div>
 
     <script>
+        // Debug function
+        function addDebugInfo(info) {
+            const debugDiv = document.getElementById('debug');
+            debugDiv.innerHTML += '<div class="debug">' + info + '</div>';
+        }
+
         // Lấy parameters từ URL
+        const currentUrl = window.location.href;
+        addDebugInfo('Current URL: ' + currentUrl);
+        
         const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const error = urlParams.get('error');
         const type = urlParams.get('type');
         const token = urlParams.get('token');
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
+        
+        addDebugInfo('Parameters: type=' + type + ', token=' + (token ? 'YES' : 'NO') + ', code=' + (code ? 'YES' : 'NO') + ', error=' + error);
         
         const messageDiv = document.getElementById('message');
         
-        // Xử lý Envato OAuth callback
-        if (code) {
-            messageDiv.innerHTML = `
-                <p class="success">✅ Kết nối Envato thành công!</p>
-                <p>Đang chuyển về ứng dụng... <span class="countdown" id="countdown">3</span></p>
-                <button class="btn" onclick="openApp()">Mở ứng dụng ngay</button>
+        function showMessage(isSuccess, title, description, showButtons = true) {
+            const statusClass = isSuccess ? 'success' : 'error';
+            const emoji = isSuccess ? '✅' : '❌';
+            
+            let html = `
+                <p class="${statusClass}">${emoji} ${title}</p>
+                <p>${description}</p>
             `;
             
-            // Countdown và tự động mở app
-            let countdown = 3;
-            const countdownElement = document.getElementById('countdown');
-            const countdownInterval = setInterval(() => {
-                countdown--;
-                if (countdownElement) {
-                    countdownElement.textContent = countdown;
-                }
-                
-                if (countdown <= 0) {
-                    clearInterval(countdownInterval);
-                    openApp();
-                }
-            }, 1000);
-            
-        } else if (error) {
-            let errorMessage = 'Có lỗi xảy ra khi kết nối Envato';
-            
-            if (error === 'access_denied') {
-                errorMessage = 'Bạn đã từ chối cấp quyền truy cập';
-            } else if (error === 'invalid_request') {
-                errorMessage = 'Yêu cầu không hợp lệ';
+            if (showButtons) {
+                html += `
+                    <button class="btn" onclick="openApp()">Mở ứng dụng</button>
+                    <button class="btn" onclick="testDeepLink()">Test Deep Link</button>
+                `;
             }
             
-            messageDiv.innerHTML = `
-                <p class="error">❌ ${errorMessage}</p>
-                <p>Vui lòng thử lại hoặc liên hệ hỗ trợ.</p>
-                <button class="btn" onclick="openApp()">Quay về ứng dụng</button>
-            `;
-            
-        } else if (type === 'signup' && token) {
-            // Xử lý email confirmation
-            messageDiv.innerHTML = `
-                <p class="success">✅ Email đã được xác thực thành công!</p>
-                <p>Bạn có thể quay lại ứng dụng để đăng nhập.</p>
-                <button class="btn" onclick="openApp()">Mở ứng dụng</button>
-            `;
-            
-        } else if (type === 'recovery' && token) {
-            // Xử lý password recovery
-            messageDiv.innerHTML = `
-                <p class="success">✅ Link đặt lại mật khẩu hợp lệ!</p>
-                <p>Bạn có thể quay lại ứng dụng để đặt mật khẩu mới.</p>
-                <button class="btn" onclick="openApp()">Mở ứng dụng</button>
-            `;
-            
-        } else {
-            messageDiv.innerHTML = `
-                <p class="error">❌ Link không hợp lệ hoặc đã hết hạn.</p>
-                <p>Vui lòng thử lại hoặc liên hệ hỗ trợ.</p>
-                <button class="btn" onclick="openApp()">Quay về ứng dụng</button>
-            `;
+            messageDiv.innerHTML = html;
         }
         
         function openApp() {
-            // Tạo deep link URL với tất cả parameters
-            const params = new URLSearchParams();
+            let deepLink = 'com.envatotracker://envato/callback';
             
-            if (code) params.set('code', code);
-            if (error) params.set('error', error);
-            if (type) params.set('type', type);
-            if (token) params.set('token', token);
+            if (code) {
+                deepLink += '?code=' + encodeURIComponent(code);
+            } else if (error) {
+                deepLink += '?error=' + encodeURIComponent(error);
+            } else if (type && token) {
+                deepLink = 'com.envatotracker://auth/confirm?type=' + type + '&token=' + encodeURIComponent(token);
+            }
             
-            const deepLinkUrl = `com.envatotracker://auth?${params.toString()}`;
+            addDebugInfo('Opening deep link: ' + deepLink);
             
-            // Thử mở app với deep link
-            window.location.href = deepLinkUrl;
+            console.log('Opening deep link:', deepLink);
             
-            // Fallback: Hiển thị hướng dẫn sau 2 giây
+            // Thử mở deep link
+            window.location.href = deepLink;
+            
+            // Fallback message sau 3 giây
             setTimeout(() => {
-                if (document.hasFocus()) {
-                    alert('Không thể tự động mở ứng dụng. Vui lòng mở ứng dụng Envato Tracker thủ công và làm mới trang Dashboard.');
-                }
-            }, 2000);
+                addDebugInfo('Deep link timeout - app may not be installed');
+            }, 3000);
         }
         
-        // Auto detect mobile và tự động mở app
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        function testDeepLink() {
+            const testLink = 'com.envatotracker://envato/callback?code=test123';
+            addDebugInfo('Testing with: ' + testLink);
+            window.location.href = testLink;
+        }
         
-        if (isMobile && (code || type)) {
-            // Tự động mở app sau 1 giây trên mobile
-            setTimeout(() => {
+        // Xử lý các trường hợp khác nhau
+        setTimeout(() => {
+            if (type === 'signup' && token) {
+                showMessage(true, 'Email đã được xác thực!', 'Tài khoản của bạn đã được kích hoạt thành công.');
                 openApp();
-            }, 1000);
-        }
+            } else if (type === 'recovery' && token) {
+                showMessage(true, 'Link đặt lại mật khẩu hợp lệ!', 'Bạn có thể đặt mật khẩu mới trong ứng dụng.');
+                openApp();
+            } else if (code) {
+                showMessage(true, 'Kết nối Envato thành công!', 'Tài khoản Envato đã được cấp quyền thành công.');
+                openApp();
+            } else if (error) {
+                let errorMessage = 'Có lỗi xảy ra trong quá trình kết nối.';
+                
+                if (error === 'access_denied') {
+                    errorMessage = 'Bạn đã từ chối cấp quyền truy cập.';
+                } else if (error === 'invalid_request') {
+                    errorMessage = 'Yêu cầu không hợp lệ.';
+                }
+                
+                showMessage(false, 'Kết nối Envato thất bại!', errorMessage);
+                openApp();
+            } else {
+                showMessage(false, 'Link không hợp lệ', 'Không tìm thấy thông tin xác thực hợp lệ.');
+            }
+        }, 1000);
     </script>
 </body>
 </html>
