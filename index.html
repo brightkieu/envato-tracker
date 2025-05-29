@@ -1,451 +1,483 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Envato Tracker - OAuth Callback</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont,
+          'Segoe UI', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        padding: 40px 30px;
+        text-align: center;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        max-width: 450px;
+        width: 100%;
+        animation: slideUp 0.6s ease-out;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
         }
-        
-        body {
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
-        
+      }
+
+      .logo {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #82b541 0%, #73a72d 100%);
+        border-radius: 50%;
+        margin: 0 auto 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: white;
+        box-shadow: 0 8px 20px rgba(130, 181, 65, 0.3);
+      }
+
+      .title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 12px;
+        letter-spacing: -0.5px;
+      }
+
+      .subtitle {
+        color: #718096;
+        margin-bottom: 30px;
+        line-height: 1.6;
+        font-size: 16px;
+      }
+
+      .status {
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        font-weight: 600;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .success {
+        background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+        color: #276749;
+        border: 2px solid #68d391;
+      }
+
+      .error {
+        background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+        color: #c53030;
+        border: 2px solid #f56565;
+      }
+
+      .loading {
+        background: linear-gradient(135deg, #fefcbf 0%, #faf089 100%);
+        color: #b7791f;
+        border: 2px solid #f6e05e;
+      }
+
+      .spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid transparent;
+        border-top: 3px solid currentColor;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .code-display {
+        background: #f7fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 25px 0;
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 13px;
+        word-break: break-all;
+        color: #2d3748;
+        max-height: 150px;
+        overflow-y: auto;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #82b541 0%, #73a72d 100%);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(130, 181, 65, 0.4);
+        margin: 10px 5px;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(130, 181, 65, 0.5);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .debug-info {
+        background: #f7fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 25px;
+        text-align: left;
+        font-size: 11px;
+        color: #718096;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .countdown {
+        font-size: 14px;
+        color: #718096;
+        margin-top: 15px;
+      }
+
+      .redirect-info {
+        background: #ebf8ff;
+        border: 2px solid #90cdf4;
+        border-radius: 12px;
+        padding: 15px;
+        margin: 20px 0;
+        color: #2b6cb0;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .manual-options {
+        margin-top: 20px;
+      }
+
+      .deep-link-display {
+        background: #edf2f7;
+        border: 1px solid #cbd5e0;
+        border-radius: 8px;
+        padding: 10px;
+        margin: 15px 0;
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 12px;
+        word-break: break-all;
+        color: #4a5568;
+      }
+
+      @media (max-width: 480px) {
         .container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px 30px;
-            text-align: center;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-            max-width: 450px;
-            width: 100%;
-            animation: slideUp 0.6s ease-out;
+          padding: 30px 20px;
+          margin: 10px;
         }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #82B541 0%, #73A72D 100%);
-            border-radius: 50%;
-            margin: 0 auto 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            color: white;
-            box-shadow: 0 8px 20px rgba(130, 181, 65, 0.3);
-        }
-        
+
         .title {
-            font-size: 28px;
-            font-weight: 700;
-            color: #2D3748;
-            margin-bottom: 12px;
-            letter-spacing: -0.5px;
+          font-size: 24px;
         }
-        
-        .subtitle {
-            color: #718096;
-            margin-bottom: 30px;
-            line-height: 1.6;
-            font-size: 16px;
-        }
-        
-        .status {
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            font-weight: 600;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-        }
-        
-        .success {
-            background: linear-gradient(135deg, #C6F6D5 0%, #9AE6B4 100%);
-            color: #276749;
-            border: 2px solid #68D391;
-        }
-        
-        .error {
-            background: linear-gradient(135deg, #FED7D7 0%, #FEB2B2 100%);
-            color: #C53030;
-            border: 2px solid #F56565;
-        }
-        
-        .loading {
-            background: linear-gradient(135deg, #FEFCBF 0%, #FAF089 100%);
-            color: #B7791F;
-            border: 2px solid #F6E05E;
-        }
-        
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid transparent;
-            border-top: 3px solid currentColor;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .code-display {
-            background: #F7FAFC;
-            border: 2px solid #E2E8F0;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 25px 0;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 13px;
-            word-break: break-all;
-            color: #2D3748;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-        
+
         .btn {
-            background: linear-gradient(135deg, #82B541 0%, #73A72D 100%);
-            color: white;
-            border: none;
-            padding: 14px 28px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(130, 181, 65, 0.4);
-            margin: 10px 5px;
+          width: 100%;
+          margin: 5px 0;
         }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(130, 181, 65, 0.5);
-        }
-        
-        .btn:active {
-            transform: translateY(0);
-        }
-        
-        .debug-info {
-            background: #F7FAFC;
-            border: 1px solid #E2E8F0;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 25px;
-            text-align: left;
-            font-size: 11px;
-            color: #718096;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        
-        .countdown {
-            font-size: 14px;
-            color: #718096;
-            margin-top: 15px;
-        }
-        
-        .redirect-info {
-            background: #EBF8FF;
-            border: 2px solid #90CDF4;
-            border-radius: 12px;
-            padding: 15px;
-            margin: 20px 0;
-            color: #2B6CB0;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .manual-options {
-            margin-top: 20px;
-        }
-
-        .deep-link-display {
-            background: #EDF2F7;
-            border: 1px solid #CBD5E0;
-            border-radius: 8px;
-            padding: 10px;
-            margin: 15px 0;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 12px;
-            word-break: break-all;
-            color: #4A5568;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 30px 20px;
-                margin: 10px;
-            }
-            
-            .title {
-                font-size: 24px;
-            }
-            
-            .btn {
-                width: 100%;
-                margin: 5px 0;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="logo">🎯</div>
-        <h1 class="title">Envato Tracker</h1>
-        <p class="subtitle">Đang xử lý kết nối với tài khoản Envato của bạn...</p>
-        
-        <div id="status" class="status loading">
-            <div class="spinner"></div>
-            Đang xử lý OAuth callback...
-        </div>
-        
-        <div id="redirect-info" class="redirect-info" style="display: none;">
-            <strong>🚀 Đang chuyển về ứng dụng...</strong><br>
-            Nếu ứng dụng không tự động mở, vui lòng bấm nút bên dưới.
-        </div>
-        
-        <div id="code-display" class="code-display" style="display: none;"></div>
-        
-        <div id="countdown" class="countdown" style="display: none;">
-            Tự động chuyển về app trong <span id="timer">3</span> giây...
-        </div>
-        
-        <div id="manual-options" class="manual-options" style="display: none;">
-            <a href="#" id="manual-deep-link" class="btn">📱 Mở Envato Tracker</a>
-            <div id="deep-link-display" class="deep-link-display"></div>
-        </div>
-        
-        <div id="debug-info" class="debug-info" style="display: none;"></div>
+      <div class="logo">🎯</div>
+      <h1 class="title">Envato Tracker</h1>
+      <p class="subtitle">Đang xử lý kết nối với tài khoản Envato của bạn...</p>
+
+      <div id="status" class="status loading">
+        <div class="spinner"></div>
+        Đang xử lý OAuth callback...
+      </div>
+
+      <div id="redirect-info" class="redirect-info" style="display: none">
+        <strong>🚀 Đang chuyển về ứng dụng...</strong><br />
+        Nếu ứng dụng không tự động mở, vui lòng bấm nút bên dưới.
+      </div>
+
+      <div id="code-display" class="code-display" style="display: none"></div>
+
+      <div id="countdown" class="countdown" style="display: none">
+        Tự động chuyển về app trong <span id="timer">3</span> giây...
+      </div>
+
+      <div id="manual-options" class="manual-options" style="display: none">
+        <a href="#" id="manual-deep-link" class="btn">📱 Mở Envato Tracker</a>
+        <div id="deep-link-display" class="deep-link-display"></div>
+      </div>
+
+      <div id="debug-info" class="debug-info" style="display: none"></div>
     </div>
 
     <script>
-        // Utility functions
-        const $ = (id) => document.getElementById(id);
-        const show = (id) => $(id).style.display = 'block';
-        const hide = (id) => $(id).style.display = 'none';
-        
-        // Parse URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const error = urlParams.get('error');
-        const state = urlParams.get('state');
-        const errorDescription = urlParams.get('error_description');
-        
-        // Elements
-        const statusEl = $('status');
-        const codeDisplayEl = $('code-display');
-        const debugInfoEl = $('debug-info');
-        const countdownEl = $('countdown');
-        const timerEl = $('timer');
-        const manualOptionsEl = $('manual-options');
-        const manualDeepLinkEl = $('manual-deep-link');
-        const deepLinkDisplayEl = $('deep-link-display');
-        const redirectInfoEl = $('redirect-info');
-        
-        // Debug info
-        const debugInfo = {
-            timestamp: new Date().toISOString(),
-            url: window.location.href,
-            userAgent: navigator.userAgent,
-            platform: navigator.platform,
-            code: code ? code.substring(0, 20) + '...' : null,
-            error: error,
-            errorDescription: errorDescription,
-            state: state,
-            allParams: Object.fromEntries(urlParams),
-            pageLoadTime: new Date().toISOString()
-        };
-        
-        // Show debug info in development or with debug param
-        if (window.location.hostname === 'localhost' || 
-            window.location.hostname === '127.0.0.1' ||
-            window.location.search.includes('debug=1')) {
-            debugInfoEl.innerHTML = `
-                <strong>🔍 Debug Information:</strong><br>
-                <pre>${JSON.stringify(debugInfo, null, 2)}</pre>
-            `;
-            show('debug-info');
-        }
-        
-        // Enhanced logging
-        console.log('🎯 [CALLBACK] OAuth Callback Page Loaded');
-        console.log('🎯 [CALLBACK] Debug Info:', debugInfo);
-        
-        // Main processing logic
-        if (error) {
-            handleOAuthError(error, errorDescription);
-        } else if (code) {
-            handleOAuthSuccess(code, state);
-        } else {
-            handleInvalidResponse();
-        }
-        
-        function handleOAuthError(error, description) {
-            console.error('❌ [CALLBACK] OAuth Error:', error, description);
-            
-            statusEl.className = 'status error';
-            statusEl.innerHTML = `
-                ❌ Lỗi OAuth: ${error}<br>
-                <small>${description || 'Vui lòng thử lại hoặc liên hệ hỗ trợ'}</small>
-            `;
-            
-            // Show manual options immediately for errors
-            setTimeout(() => {
-                redirectToApp('error', { error, description });
-            }, 2000);
-        }
-        
-        function handleOAuthSuccess(code, state) {
-            console.log('✅ [CALLBACK] OAuth Success with code:', code.substring(0, 10) + '...');
-            
-            statusEl.className = 'status success';
-            statusEl.innerHTML = `
-                ✅ Kết nối thành công!<br>
-                <small>Đang chuyển về ứng dụng...</small>
-            `;
-            
-            show('redirect-info');
-            
-            // Show code for debugging
-            codeDisplayEl.innerHTML = `
-                <strong>🔑 Authorization Code:</strong><br>
-                <code>${code}</code>
-                ${state ? `<br><br><strong>🔒 State:</strong><br><code>${state}</code>` : ''}
-            `;
-            show('code-display');
-            
-            // Start countdown
-            startCountdown(() => {
-                redirectToApp('success', { code, state });
-            });
-        }
-        
-        function handleInvalidResponse() {
-            console.warn('⚠️ [CALLBACK] Invalid OAuth Response');
-            
-            statusEl.className = 'status error';
-            statusEl.innerHTML = `
-                ❌ Phản hồi OAuth không hợp lệ<br>
-                <small>Không nhận được authorization code hoặc error</small>
-            `;
-            
-            setTimeout(() => {
-                redirectToApp('error', { error: 'Invalid OAuth response' });
-            }, 2000);
-        }
-        
-        function startCountdown(callback) {
-            let seconds = 3;
-            timerEl.textContent = seconds;
-            show('countdown');
-            
-            const countdown = setInterval(() => {
-                seconds--;
-                timerEl.textContent = seconds;
-                
-                if (seconds <= 0) {
-                    clearInterval(countdown);
-                    hide('countdown');
-                    callback();
-                }
-            }, 1000);
-        }
-        
-        function redirectToApp(type, data) {
-            // Create deep link URL for CallbackScreen
-            const params = new URLSearchParams({
-                type: type,
-                timestamp: Date.now().toString(),
-                source: 'envato-oauth',
-                ...data
-            });
-            
-            // Use envatotracker://callback for CallbackScreen
-            const deepLinkUrl = `envatotracker://dashboard?${params.toString()}`;
-            
-            console.log('🚀 [CALLBACK] Redirecting to CallbackScreen:', deepLinkUrl);
-            console.log('🚀 [CALLBACK] Params being sent:', Object.fromEntries(params));
-            
-            // Show the deep link for manual use
-            deepLinkDisplayEl.innerHTML = `
-                <strong>Deep Link URL:</strong><br>
-                ${deepLinkUrl}
-            `;
-            
-            manualDeepLinkEl.href = deepLinkUrl;
-            show('manual-options');
-            
-            // Try to open the app automatically
-            try {
-                window.location.href = deepLinkUrl;
-                console.log('✅ [CALLBACK] Deep link triggered successfully');
-            } catch (error) {
-                console.error('❌ [CALLBACK] Failed to trigger deep link:', error);
-            }
-            
-            // Update status after attempt
-            setTimeout(() => {
-                statusEl.innerHTML = `
-                    📱 ${type === 'success' ? 'Kết nối thành công!' : 'Có lỗi xảy ra'}<br>
-                    <small>Nếu ứng dụng không tự động mở, vui lòng bấm nút "Mở Envato Tracker" bên dưới</small>
-                `;
-            }, 1500);
-        }
-        
-        // Handle page visibility change (when user returns from app)
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                console.log('👀 [CALLBACK] Page became visible again - user returned from app');
-            }
-        });
-        
-        // Prevent accidental navigation away during processing
-        window.addEventListener('beforeunload', (e) => {
-            if (statusEl.className.includes('loading')) {
-                e.preventDefault();
-                e.returnValue = 'OAuth đang được xử lý. Bạn có chắc chắn muốn rời khỏi trang?';
-            }
-        });
-        
-        // Auto-timeout for loading state
+      // Utility functions
+      const $ = id => document.getElementById(id);
+      const show = id => ($(id).style.display = 'block');
+      const hide = id => ($(id).style.display = 'none');
+
+      // Parse URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const error = urlParams.get('error');
+      const state = urlParams.get('state');
+      const errorDescription = urlParams.get('error_description');
+
+      // Elements
+      const statusEl = $('status');
+      const codeDisplayEl = $('code-display');
+      const debugInfoEl = $('debug-info');
+      const countdownEl = $('countdown');
+      const timerEl = $('timer');
+      const manualOptionsEl = $('manual-options');
+      const manualDeepLinkEl = $('manual-deep-link');
+      const deepLinkDisplayEl = $('deep-link-display');
+      const redirectInfoEl = $('redirect-info');
+
+      // Debug info
+      const debugInfo = {
+        timestamp: new Date().toISOString(),
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        code: code ? code.substring(0, 20) + '...' : null,
+        error: error,
+        errorDescription: errorDescription,
+        state: state,
+        allParams: Object.fromEntries(urlParams),
+        pageLoadTime: new Date().toISOString(),
+      };
+
+      // Show debug info in development or with debug param
+      if (
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.search.includes('debug=1')
+      ) {
+        debugInfoEl.innerHTML = `
+              <strong>🔍 Debug Information:</strong><br>
+              <pre>${JSON.stringify(debugInfo, null, 2)}</pre>
+          `;
+        show('debug-info');
+      }
+
+      // Enhanced logging
+      console.log('🎯 [CALLBACK] OAuth Callback Page Loaded');
+      console.log('🎯 [CALLBACK] Debug Info:', debugInfo);
+
+      // Main processing logic
+      if (error) {
+        handleOAuthError(error, errorDescription);
+      } else if (code) {
+        handleOAuthSuccess(code, state);
+      } else {
+        handleInvalidResponse();
+      }
+
+      function handleOAuthError(error, description) {
+        console.error('❌ [CALLBACK] OAuth Error:', error, description);
+
+        statusEl.className = 'status error';
+        statusEl.innerHTML = `
+              ❌ Lỗi OAuth: ${error}<br>
+              <small>${
+                description || 'Vui lòng thử lại hoặc liên hệ hỗ trợ'
+              }</small>
+          `;
+
+        // Show manual options immediately for errors
         setTimeout(() => {
-            if (statusEl.className.includes('loading')) {
-                console.warn('⏰ [CALLBACK] Processing timeout');
-                handleInvalidResponse();
-            }
-        }, 10000);
-        
-        console.log('🎯 [CALLBACK] OAuth Callback Handler Ready');
+          redirectToApp('error', {error, description});
+        }, 2000);
+      }
+
+      function handleOAuthSuccess(code, state) {
+        console.log(
+          '✅ [CALLBACK] OAuth Success with code:',
+          code.substring(0, 10) + '...',
+        );
+
+        statusEl.className = 'status success';
+        statusEl.innerHTML = `
+              ✅ Kết nối thành công!<br>
+              <small>Đang chuyển về ứng dụng...</small>
+          `;
+
+        show('redirect-info');
+
+        // Show code for debugging
+        codeDisplayEl.innerHTML = `
+              <strong>🔑 Authorization Code:</strong><br>
+              <code>${code}</code>
+              ${
+                state
+                  ? `<br><br><strong>🔒 State:</strong><br><code>${state}</code>`
+                  : ''
+              }
+          `;
+        show('code-display');
+
+        // Start countdown
+        startCountdown(() => {
+          redirectToApp('success', {code, state});
+        });
+      }
+
+      function handleInvalidResponse() {
+        console.warn('⚠️ [CALLBACK] Invalid OAuth Response');
+
+        statusEl.className = 'status error';
+        statusEl.innerHTML = `
+              ❌ Phản hồi OAuth không hợp lệ<br>
+              <small>Không nhận được authorization code hoặc error</small>
+          `;
+
+        setTimeout(() => {
+          redirectToApp('error', {error: 'Invalid OAuth response'});
+        }, 2000);
+      }
+
+      function startCountdown(callback) {
+        let seconds = 3;
+        timerEl.textContent = seconds;
+        show('countdown');
+
+        const countdown = setInterval(() => {
+          seconds--;
+          timerEl.textContent = seconds;
+
+          if (seconds <= 0) {
+            clearInterval(countdown);
+            hide('countdown');
+            callback();
+          }
+        }, 1000);
+      }
+
+      function redirectToApp(type, data) {
+        // Create deep link URL for CallbackScreen - only send code for success
+        let params;
+        if (type === 'success' && data.code) {
+          params = new URLSearchParams({
+            code: data.code,
+          });
+        } else {
+          // For errors, send minimal info
+          params = new URLSearchParams({
+            code: null,
+          });
+        }
+
+        // Use envatotracker://callback for CallbackScreen
+        const deepLinkUrl = `envatotracker://dashboard?code=${params.toString()}`;
+
+        console.log(
+          '🚀 [CALLBACK] Redirecting to CallbackScreen:',
+          deepLinkUrl,
+        );
+        console.log(
+          '🚀 [CALLBACK] Params being sent:',
+          Object.fromEntries(params),
+        );
+
+        // Show the deep link for manual use
+        deepLinkDisplayEl.innerHTML = `
+              <strong>Deep Link URL:</strong><br>
+              ${deepLinkUrl}
+          `;
+
+        manualDeepLinkEl.href = deepLinkUrl;
+        show('manual-options');
+
+        // Try to open the app automatically
+        try {
+          window.location.href = deepLinkUrl;
+          console.log('✅ [CALLBACK] Deep link triggered successfully');
+        } catch (error) {
+          console.error('❌ [CALLBACK] Failed to trigger deep link:', error);
+        }
+
+        // Update status after attempt
+        setTimeout(() => {
+          statusEl.innerHTML = `
+                  📱 ${
+                    type === 'success' ? 'Kết nối thành công!' : 'Có lỗi xảy ra'
+                  }<br>
+                  <small>Nếu ứng dụng không tự động mở, vui lòng bấm nút "Mở Envato Tracker" bên dưới</small>
+              `;
+        }, 1500);
+      }
+
+      // Handle page visibility change (when user returns from app)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          console.log(
+            '👀 [CALLBACK] Page became visible again - user returned from app',
+          );
+        }
+      });
+
+      // Prevent accidental navigation away during processing
+      window.addEventListener('beforeunload', e => {
+        if (statusEl.className.includes('loading')) {
+          e.preventDefault();
+          e.returnValue =
+            'OAuth đang được xử lý. Bạn có chắc chắn muốn rời khỏi trang?';
+        }
+      });
+
+      // Auto-timeout for loading state
+      setTimeout(() => {
+        if (statusEl.className.includes('loading')) {
+          console.warn('⏰ [CALLBACK] Processing timeout');
+          handleInvalidResponse();
+        }
+      }, 10000);
+
+      console.log('🎯 [CALLBACK] OAuth Callback Handler Ready');
     </script>
-</body>
+  </body>
 </html>
