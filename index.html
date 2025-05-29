@@ -330,7 +330,7 @@
 
         // Show manual options immediately for errors
         setTimeout(() => {
-          redirectToApp('error', {error, description});
+          redirectToApp('error', {error: error, description: description});
         }, 2000);
       }
 
@@ -376,7 +376,7 @@
           `;
 
         setTimeout(() => {
-          redirectToApp('error', {error: 'Invalid OAuth response'});
+          redirectToApp('error', {error: 'invalid_response', description: 'No authorization code or error received'});
         }, 2000);
       }
 
@@ -398,16 +398,32 @@
       }
 
       function redirectToApp(type, data) {
-        // Use envatotracker://callback for CallbackScreen
-        const deepLinkUrl = `envatotracker://dashboard?code=${data.code.toString()}`;
+        let deepLinkUrl;
+        
+        if (type === 'success' && data.code) {
+          // Success case with code
+          deepLinkUrl = `envatotracker://dashboard?code=${encodeURIComponent(data.code)}`;
+          if (data.state) {
+            deepLinkUrl += `&state=${encodeURIComponent(data.state)}`;
+          }
+        } else if (type === 'error') {
+          // Error case
+          deepLinkUrl = `envatotracker://dashboard?error=${encodeURIComponent(data.error || 'unknown_error')}`;
+          if (data.description) {
+            deepLinkUrl += `&error_description=${encodeURIComponent(data.description)}`;
+          }
+        } else {
+          // Fallback
+          deepLinkUrl = 'envatotracker://dashboard';
+        }
 
         console.log(
-          '🚀 [CALLBACK] Redirecting to CallbackScreen:',
+          '🚀 [CALLBACK] Redirecting to app:',
           deepLinkUrl,
         );
         console.log(
-          '🚀 [CALLBACK] Params being sent:',
-          Object.fromEntries(params),
+          '🚀 [CALLBACK] Data being sent:',
+          data,
         );
 
         // Show the deep link for manual use
