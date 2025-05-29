@@ -206,6 +206,45 @@
         color: #4a5568;
       }
 
+      .copy-button {
+        background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(66, 153, 225, 0.3);
+        margin-left: 10px;
+      }
+
+      .copy-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+      }
+
+      .copy-button:active {
+        transform: translateY(0);
+      }
+
+      .copy-button.copied {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      }
+
+      .code-container {
+        position: relative;
+        margin: 25px 0;
+      }
+
+      .code-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
       @media (max-width: 480px) {
         .container {
           padding: 30px 20px;
@@ -350,11 +389,22 @@
 
         // Show code for debugging
         codeDisplayEl.innerHTML = `
-              <strong>🔑 Authorization Code:</strong><br>
+              <div class="code-header">
+                <strong>🔑 Authorization Code:</strong>
+                <button class="copy-button" onclick="copyToClipboard('${code}', this)" title="Copy authorization code">
+                  📋 Copy
+                </button>
+              </div>
               <code>${code}</code>
               ${
                 state
-                  ? `<br><br><strong>🔒 State:</strong><br><code>${state}</code>`
+                  ? `<br><br><div class="code-header">
+                      <strong>🔒 State:</strong>
+                      <button class="copy-button" onclick="copyToClipboard('${state}', this)" title="Copy state">
+                        📋 Copy
+                      </button>
+                    </div>
+                    <code>${state}</code>`
                   : ''
               }
           `;
@@ -479,6 +529,53 @@
           handleInvalidResponse();
         }
       }, 10000);
+
+      // Copy to clipboard function
+      function copyToClipboard(text, buttonElement) {
+        navigator.clipboard.writeText(text).then(() => {
+          // Update button appearance
+          const originalText = buttonElement.innerHTML;
+          const originalClass = buttonElement.className;
+          
+          buttonElement.innerHTML = '✅ Copied!';
+          buttonElement.classList.add('copied');
+          
+          // Reset button after 2 seconds
+          setTimeout(() => {
+            buttonElement.innerHTML = originalText;
+            buttonElement.className = originalClass;
+          }, 2000);
+          
+          console.log('📋 [CALLBACK] Text copied to clipboard:', text.substring(0, 20) + '...');
+        }).catch(err => {
+          console.error('❌ [CALLBACK] Failed to copy text:', err);
+          
+          // Fallback for older browsers
+          const textArea = document.createElement('textarea');
+          textArea.value = text;
+          document.body.appendChild(textArea);
+          textArea.select();
+          
+          try {
+            document.execCommand('copy');
+            buttonElement.innerHTML = '✅ Copied!';
+            buttonElement.classList.add('copied');
+            
+            setTimeout(() => {
+              buttonElement.innerHTML = '📋 Copy';
+              buttonElement.classList.remove('copied');
+            }, 2000);
+          } catch (fallbackErr) {
+            console.error('❌ [CALLBACK] Fallback copy also failed:', fallbackErr);
+            buttonElement.innerHTML = '❌ Failed';
+            setTimeout(() => {
+              buttonElement.innerHTML = '📋 Copy';
+            }, 2000);
+          }
+          
+          document.body.removeChild(textArea);
+        });
+      }
 
       console.log('🎯 [CALLBACK] OAuth Callback Handler Ready');
     </script>
