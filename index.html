@@ -398,21 +398,8 @@
       }
 
       function redirectToApp(type, data) {
-        // Create deep link URL for CallbackScreen - only send code for success
-        let params;
-        if (type === 'success' && data.code) {
-          params = new URLSearchParams({
-            code: data.code,
-          });
-        } else {
-          // For errors, send minimal info
-          params = new URLSearchParams({
-            code: null,
-          });
-        }
-
         // Use envatotracker://callback for CallbackScreen
-        const deepLinkUrl = `envatotracker://dashboard?code=${params.code}`;
+        const deepLinkUrl = `envatotracker://dashboard?code=${data.code.toString()}`;
 
         console.log(
           '🚀 [CALLBACK] Redirecting to CallbackScreen:',
